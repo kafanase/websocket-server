@@ -4,8 +4,8 @@ const httpProxy = require('http-proxy');
 // Отключаем строгую проверку SSL на уровне всего процесса Node.js
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-// Целевой WSS/HTTPS сервер (можно переопределить через Environment Variables в Render)
-const TARGET_URL = process.env.TARGET_URL || '[https://node9.quaxly.com:25724](https://node9.quaxly.com:25724)';
+// Целевой WSS/HTTPS сервер
+const TARGET_URL = process.env.TARGET_URL || 'https://node9.quaxly.com:25724';
 
 const proxy = httpProxy.createProxyServer({
   target: TARGET_URL,
