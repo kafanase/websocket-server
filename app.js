@@ -1,45 +1,44 @@
-const http = require('http');
-const httpProxy = require('http-proxy');
+const net = require('net');
+const tls = require('tls');
+const { URL } = require('url');
 
-// Отключаем строгую проверку SSL на уровне всего процесса Node.js
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-// Целевой WSS/HTTPS сервер
-const TARGET_URL = process.env.TARGET_URL || 'https://node9.quaxly.com:25724';
+const TARGET = process.env.TARGET_URL || 'https://node9.quaxly.com:25724';
+const parsedUrl = new URL(TARGET);
 
-const proxy = httpProxy.createProxyServer({
-  target: TARGET_URL,
-  changeOrigin: true,
-  ws: true,
-  secure: false // Игнорировать ошибки невалидных/самоподписанных сертификатов
-});
+const TARGET_HOST = parsedUrl.hostname;
+const TARGET_PORT = parseInt(parsedUrl.port) || (parsedUrl.protocol === 'https:' ? 443 : 80);
+const IS_SECURE = parsedUrl.protocol === 'https:' || parsedUrl.protocol === 'wss:';
 
-proxy.on('error', (err, req, res) => {
-  console.error('[PROXY ERROR]:', err.message);
-  if (res && res.writeHead) {
-    res.writeHead(502, { 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end('Bad Gateway: Не удалось соединиться с VPN сервером');
+const server = net.createServer((clientSocket) => {
+  clientSocket.on('error', () => {});
+
+  let targetSocket;
+
+  if (IS_SECURE) {
+    targetSocket = tls.connect({
+      host: TARGET_HOST,
+      port: TARGET_PORT,
+      servername: TARGET_HOST,
+      rejectUnauthorized: false
+    });
+  } else {
+    targetSocket = net.connect({
+      host: TARGET_HOST,
+      port: TARGET_PORT
+    });
   }
-});
 
-proxy.on('proxyReqWs', (proxyReq, req, socket, options, head) => {
-  proxyReq.setHeader('Host', 'node9.quaxly.com:25724');
-  proxyReq.setHeader('Origin', 'https://node9.quaxly.com:25724');
-});
+  targetSocket.on('error', () => {
+    clientSocket.destroy();
+  });
 
-const server = http.createServer((req, res) => {
-  proxy.web(req, res);
-});
-
-server.on('upgrade', (req, socket, head) => {
-  proxy.ws(req, socket, head);
+  clientSocket.pipe(targetSocket);
+  targetSocket.pipe(clientSocket);
 });
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`=================================`);
-  console.log(`Прокси запущен на порту: ${PORT}`);
-  console.log(`Целевой сервер: ${TARGET_URL}`);
-  console.log(`Проверка SSL: ОТКЛЮЧЕНА`);
-  console.log(`=================================`);
+  console.log(`Application started on port ${PORT}`);
 });
