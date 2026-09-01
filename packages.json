@@ -2,9 +2,9 @@
   "name": "wss-proxy",
   "version": "1.0.0",
   "description": "WebSocket Reverse Proxy with SSL Bypass",
-  "main": "server.js",
+  "main": "app.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node app.js"
   },
   "dependencies": {
     "http-proxy": "^1.18.1"
