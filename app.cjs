@@ -38,7 +38,7 @@ const server = net.createServer((clientSocket) => {
   targetSocket.pipe(clientSocket);
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 server.listen(PORT, () => {
   console.log(`Application started on port ${PORT}`);
 });
