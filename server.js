@@ -24,7 +24,7 @@ proxy.on('error', (err, req, res) => {
 
 proxy.on('proxyReqWs', (proxyReq, req, socket, options, head) => {
   proxyReq.setHeader('Host', 'node9.quaxly.com:25724');
-  proxyReq.setHeader('Origin', '[https://node9.quaxly.com:25724](https://node9.quaxly.com:25724)');
+  proxyReq.setHeader('Origin', 'https://node9.quaxly.com:25724');
 });
 
 const server = http.createServer((req, res) => {
